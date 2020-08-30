@@ -1,27 +1,38 @@
-const contacts = require('./contacts');
-const argv = require('yargs').argv;
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const logger = require('morgan');
+const router = require('./router/router');
+const errorsHandler = require('./middlewares/errors');
+const notFound = require('./middlewares/notFound');
 
-function invokeAction({ action, id, name, email, phone }) {
-    switch (action) {
-        case 'list':
-            contacts.listContacts();
-            break;
+const port = process.env.PORT || 5000;
+const isDev = process.env.NODE_ENV === 'development';
 
-        case 'get':
-            contacts.getContactById(id);
-            break;
+if (isDev) app.use(logger('dev'));
 
-        case 'add':
-            contacts.addContact(name, email, phone);
-            break;
+app.use(cors('*'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-        case 'remove':
-            contacts.removeContact(id);
-            break;
+app.get('/', function(req, res) {
+    res.send('DataBase of Contacts');
+});
 
-        default:
-            console.warn('\x1B[31m Unknown action type!');
-    }
-}
+app.use('/api', router);
+app.use('*', notFound);
+app.use(errorsHandler);
 
-invokeAction(argv);
+app.use('*', (req, res) => {
+    res.status(404).json({
+        get_contacts: 'http://localhost:5000/api/contacts',
+        create_contacts: 'http://localhost:5000/api/contacts',
+        find_contact: 'http://localhost:5000/api/contacts/:contactId',
+        delete_contacts: 'http://localhost:5000/api/contacts/:contactId',
+        update_contacts: 'http://localhost:5000/api/contacts/:contactId',
+    });
+});
+
+app.listen(port, () => {
+    console.log(`Server started on ${port}`);
+});
