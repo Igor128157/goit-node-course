@@ -1,38 +1,45 @@
-const dotenv = require("dotenv");
 const express = require("express");
-const bodyparser = require("body-parser");
-const cors = require("cors");
 const morgan = require("morgan");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+const contactsRouter = require("./routes/contactsRouter");
+const connectMongoDB = require("./database");
 
-const userRouter = require("./routers/userRouter");
-const connectMongoDb = require("./database/");
+const authRouter = require("./routes/authRouter");
+const userRouter = require("./routes/userRouter");
 
 dotenv.config();
 
 const server = async (port, callback) => {
   try {
-    const schemas = await connectMongoDb();
-
     const app = express();
 
-    app.use(bodyparser.json());
+    const schemas = await connectMongoDB();
+
     app.use(cors());
+
     app.use(morgan("combined"));
 
+    app.use(bodyParser.json());
+
     app.use((req, res, next) => {
-      req.mongoDb = schemas;
+      req.mongoDB = schemas;
+
       next();
     });
 
-    app.use("/api/contacts", userRouter);
+    app.use("/api", contactsRouter);
+    app.use("/auth", authRouter);
+    app.use("/users", userRouter);
 
     app.use((req, res, next) => {
       res.status(404).send({ data: { message: "Not Found" } });
     });
 
     app.listen(port, callback);
-  } catch (error) {
-    console.log(error);
+  } catch (e) {
+    console.log(e);
   }
 };
 

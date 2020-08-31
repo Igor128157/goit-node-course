@@ -1,111 +1,55 @@
-const { throwErr } = require("../helpers");
+const { throwAnswer } = require("../helpers");
 
-const mongoose = require("mongoose");
+const contact = {
+  get: async (data, { mongoDb: { userModel } }) => {
+    const token = data.params.authorization;
 
-const user = {
-  getAll: async (_, { mongoDb }) => {
-    const { userModel } = mongoDb;
-
-    const users = await userModel.find();
-
-    return {
-      status: 200,
-      users,
-    };
-  },
-
-  get: async (data, { mongoDb }) => {
-    const _id = data.params.id;
-    const { userModel } = mongoDb;
-
-    const user = await userModel.findById(_id);
+    const user = await userModel.findOne({ token });
 
     if (!user) {
-      throwErr(404, "user not found");
+      throwAnswer(401, { message: "Not authorized" });
     }
 
     return {
       status: 200,
-      user,
+      email: user.email,
+      subscription: user.subscription,
+      avatar: user.avatarURL,
     };
   },
 
-  create: async (data, { mongoDb }) => {
-    const { userModel } = mongoDb;
+  update: async (data, { mongoDb: { userModel } }) => {
+    const token = data.params.authorization;
 
-    const { name, email, phone, subscription, password, token = "" } = data;
-
-    if (
-      name === undefined ||
-      email === undefined ||
-      phone === undefined ||
-      subscription === undefined ||
-      password === undefined
-    ) {
-      throwErr(400, "Missing required name field");
-    }
-
-    await userModel.create({
-      _id: mongoose.Types.ObjectId(),
-      name,
+    const {
       email,
-      phone,
       subscription,
-      password,
-      token,
-    });
+      file: { originalname },
+    } = data;
 
-    return {
-      status: 201,
-      user: { name, email, phone, subscription, password, token },
-    };
-  },
+    const user = await userModel.findOne({ token });
 
-  update: async (data, { mongoDb }) => {
-    const { userModel } = mongoDb;
-    const _id = data.params.id;
-
-    const { name, email, phone, subscription, password, token } = data;
-
-    if (
-      name === undefined ||
-      email === undefined ||
-      phone === undefined ||
-      subscription === undefined ||
-      password === undefined
-    ) {
-      throwErr(400, "Missing required name field");
+    if (!user) {
+      throwAnswer(401, { message: "Not authorized" });
     }
 
-    const user = await userModel.findOneAndUpdate(
-      { _id },
+    if (!email || !originalname || !subscription) {
+      throwAnswer(400, "Missing required name field");
+    }
+
+    await userModel.findOneAndUpdate(
+      { token },
       {
-        name,
         email,
-        phone,
         subscription,
-        password,
-        token,
       }
     );
-
     return {
       status: 200,
-      user,
-    };
-  },
-
-  delete: async (data, { mongoDb }) => {
-    const { userModel } = mongoDb;
-    const _id = data.params.id;
-
-    await userModel.deleteOne({ _id });
-
-    return {
-      status: 200,
-      message: "Contact deleted",
+      email,
+      subscription,
     };
   },
 };
 
-module.exports = user;
+module.exports = contact;
