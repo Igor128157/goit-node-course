@@ -1,0 +1,36 @@
+{
+  "name": "goit-node-course",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "mongodb": "^3.6.0",
+    "mongoose": "^5.10.2",
+    "moongoose": "^0.0.5",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.4",
+    "path": "^0.12.7",
+    "yargs": "^15.4.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "npm run index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon ./src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Igor128157/goit-node-course.git"
+  },
+  "author": "Verovka Ihor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Igor128157/goit-node-course/issues"
+  },
+  "homepage": "https://github.com/Igor128157/goit-node-course#readme"
+}
