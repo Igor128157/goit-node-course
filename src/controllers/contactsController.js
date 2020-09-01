@@ -1,62 +1,99 @@
-const contactsController = {
-    get: async ({ params: { id } }, { mongoDB: { contactModel } }) => {
-      try {
-        const contact = await contactModel.findById(id);
-  
-        return { status: 200, payload: contact };
-      } catch (e) {
-        console.log(e);
-        throw { status: 404, message: { message: "Not found" } };
+const { throwErr } = require("../helpers");
+
+const mongoose = require("mongoose");
+
+const contact = {
+  getAll: async (_, { mongoDb }) => {
+    const { contactModel } = mongoDb;
+
+    const contacts = await contactModel.find();
+
+    return {
+      status: 200,
+      contacts,
+    };
+  },
+
+  get: async (data, { mongoDb }) => {
+    const _id = data.params.id;
+    const { contactModel } = mongoDb;
+
+    const contact = await contactModel.findById(_id);
+
+    if (!contact) {
+      throwErr(404, "contact not found");
+    }
+
+    return {
+      status: 200,
+      contact,
+    };
+  },
+
+  create: async (data, { mongoDb }) => {
+    const { contactModel } = mongoDb;
+
+    const { name, email, phone, subscription, password, token = "" } = data;
+
+    if (!name || !email || !phone || !subscription || !password) {
+      throwErr(400, "Missing required name field");
+    }
+
+    await contactModel.create({
+      _id: mongoose.Types.ObjectId(),
+      name,
+      email,
+      phone,
+      subscription,
+      password,
+      token,
+    });
+
+    return {
+      status: 201,
+      contact: { name, email, phone, subscription, password, token },
+    };
+  },
+
+  update: async (data, { mongoDb }) => {
+    const { contactModel } = mongoDb;
+    const _id = data.params.id;
+
+    const { name, email, phone, subscription, password, token } = data;
+
+    if (!name || !email || !phone || !subscription || !password) {
+      throwErr(400, "Missing required name field");
+    }
+
+    const contact = await contactModel.findOneAndUpdate(
+      { _id },
+      {
+        name,
+        email,
+        phone,
+        subscription,
+        password,
+        token,
       }
-    },
-  
-    getAll: async (_, { mongoDB }) => {
-      try {
-        const { contactModel } = mongoDB;
-  
-        const contacts = await contactModel.find();
-  
-        return { status: 200, payload: contacts };
-      } catch (e) {
-        console.log(e);
-      }
-    },
-  
-    create: async (data, { mongoDB: { contactModel } }) => {
-      try {
-        const contact = await contactModel.create(data);
-  
-        return { status: 201, payload: contact };
-      } catch (e) {
-        console.log(e);
-      }
-    },
-  
-    update: async (data, { mongoDB: { contactModel } }) => {
-      try {
-        const { params: { id: _id }, ...body } = data;
-  
-        const contact = await contactModel.findOneAndUpdate({ _id }, body, {
-          new: true,
-        });
-  
-        return { status: 200, payload: contact };
-      } catch (e) {
-        console.log(e);
-        throw { status: 404, message: { message: "Not found" } };
-      }
-    },
-  
-    delete: async ({ params: { id: _id } }, { mongoDB: { contactModel } }) => {
-      try {
-        await contactModel.deleteOne({ _id });
-  
-        return { status: 200, payload: { message: "contact deleted" } };
-      } catch (e) {
-        console.log(e);
-        throw { status: 404, message: { message: "Not found" } };
-      }
-    },
-  };
-  
-  module.exports = contactsController;
+    );
+
+    return {
+      status: 200,
+      contact,
+    };
+  },
+
+  delete: async (data, { mongoDb }) => {
+    const { contactModel } = mongoDb;
+    const _id = data.params.id;
+
+    await contactModel.deleteOne({ _id });
+
+    return {
+      status: 200,
+      message: "Contact deleted",
+    };
+  },
+};
+
+module.exports = contact;

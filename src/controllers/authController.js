@@ -1,14 +1,15 @@
+const { throwErr } = require("./../helpers");
 const mongoose = require("mongoose");
-const { throwAnswer } = require("../helpers");
 
 const auth = {
-  register: async (data, { mongoDb: { userModel } }) => {
+  register: async (data, { mongoDb }) => {
     const { email, password } = data;
+    const { userModel } = mongoDb;
 
-    if (!email || !password) return throwErr(400, "Check required fields");
+    if (!email || !password) return throwErr(400, "Check required fields.");
 
     const user = await userModel.findOne({ email });
-    if (user) return throwAnswer(409, { message: "Email in use" });
+    if (user) return throwErr(409, { message: "Email in use" });
 
     await userModel.create({
       _id: mongoose.Types.ObjectId(),
@@ -25,17 +26,18 @@ const auth = {
     };
   },
 
-  logIn: async (data, { mongoDb: { userModel } }) => {
+  logIn: async (data, { mongoDb }) => {
     const { email, password } = data;
+    const { userModel } = mongoDb;
 
     if (!email || !password)
-      return throwAnswer(401, "Email or password is wrong.");
+      return throwErr(401, "Email or password is wrong.");
 
     const user = await userModel.findOne({ email });
-    if (!user) return throwAnswer(401, "Email or password is wrong.");
+    if (!user) return throwErr(401, "Email or password is wrong.");
 
     const isValid = await user.comparePassword(password.toString());
-    if (!isValid) return throwAnswer(401, "Email or password is wrong.");
+    if (!isValid) return throwErr(401, "Email or password is wrong.");
 
     const token = await user.generateToken();
     const userWithToken = await userModel.findOneAndUpdate(
@@ -50,14 +52,14 @@ const auth = {
     };
   },
 
-  logOut: async (data, { mongoDb: { userModel } }) => {
+  logOut: async (data, { mongoDb }) => {
     const token = data.params.authorization;
-
+    const { userModel } = mongoDb;
 
     const user = await userModel.findOne({ token });
 
     if (!user) {
-      throwAnswer(401, { message: "Not authorized" });
+      throwErr(401, { message: "Not authorized" });
     }
     await userModel.findOneAndUpdate(
       { token },

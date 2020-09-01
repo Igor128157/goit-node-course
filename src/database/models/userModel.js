@@ -2,25 +2,28 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Schema } = mongoose;
-const { JWT_SECRET_TOKEN } = process.env;
+
+const { HOST } = process.env;
 
 const userSchema = new Schema({
-  login: mongoose.Schema.Types.String,
-  password: mongoose.Schema.Types.String,
-  token: {
-    type: mongoose.Schema.Types.String,
-    default: null,
-  },
-  tasks: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "task",
+  email: {
+    type: Schema.Types.String,
+    validate: {
+      validator: (email) => email.indexOf("@") > -1,
+      message: "Invalid email format",
     },
-  ],
-  created: {
-    type: Date,
-    default: Date.now,
   },
+  password: Schema.Types.String,
+  avatarURL: {
+    type: Schema.Types.String,
+    default: `${HOST}/images/base_avatar.jpg`,
+  },
+  subscription: {
+    type: Schema.Types.String,
+    enum: ["free", "pro", "premium"],
+    default: "free",
+  },
+  token: { type: Schema.Types.String, default: null },
 });
 
 userSchema.pre("save", async function (next) {
@@ -40,20 +43,21 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 
 userSchema.methods.generateToken = function () {
   const user = this;
+  const { JWT_SECRET_TOKEN } = process.env;
 
   return jwt.sign({ _id: user._id }, JWT_SECRET_TOKEN);
 };
 
 userSchema.methods.isValidToken = function (token) {
+  const { JWT_SECRET_TOKEN } = process.env;
   try {
     jwt.verify(token, JWT_SECRET_TOKEN);
-  } catch (err) {
+  } catch (error) {
     return false;
   }
-
   return true;
 };
 
-const User = mongoose.model("user", userSchema);
+const userModel = mongoose.model("user", userSchema);
 
-module.exports = User;
+module.exports = userModel;

@@ -1,23 +1,27 @@
 const { Router } = require("express");
-const  contactsController  = require("../controllers/contactsController");
 const { makeCall } = require("../helpers");
+const contactController = require("../controllers/contactController");
 
-const contactsRouter = Router();
+const contactRouter = Router();
 
-contactsRouter.get("/get", (req, res) =>
-    makeCall(req, res, contactsController.getAll)
-);
-contactsRouter.get("/get/:id", (req, res) =>
-  makeCall(req, res, contactsController.get)
-);
-contactsRouter.post("/contacts", (req, res) =>
-  makeCall(req, res, contactsController.create)
-);
-contactsRouter.patch("/contacts/:id", (req, res) =>
-  makeCall(req, res, contactsController.update)
-);
-contactsRouter.delete("/contacts/:id", (req, res) =>
-  makeCall(req, res, contactsController.delete)
+contactRouter.get("/get", (req, res) =>
+  makeCall(req, res, contactController.getAll)
 );
 
-module.exports = contactsRouter;
+contactRouter.get("/get/:id", (req, res) =>
+  makeCall(req, res, contactController.get)
+);
+
+contactRouter.post("/create", (req, res) =>
+  makeCall(req, res, contactController.create)
+);
+
+contactRouter.patch("/update/:id", (req, res) =>
+  makeCall(req, res, contactController.update)
+);
+
+contactRouter.delete("/delete/:id", (req, res) =>
+  makeCall(req, res, contactController.delete)
+);
+
+module.exports = contactRouter;

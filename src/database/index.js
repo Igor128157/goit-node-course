@@ -1,24 +1,20 @@
 const mongoose = require("mongoose");
 const schemas = require("./models");
+const { throwErr } = require("../helpers");
 
-const connectMongoDB = async () => {
-  try {
-    const { MONGO_DB_URL } = process.env;
-    const connection = await mongoose.connect(MONGO_DB_URL, {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-      useFindAndModify: false,
-    });
+const setupMongoDb = async () => {
+  const { MONGO_DB_URL, MONGO_DB_DATABASE } = process.env;
 
-    connection
-      ? console.log("Database connection successful")
-      : console.log("Database connection failed");
+  const connection = await mongoose.connect(MONGO_DB_URL + MONGO_DB_DATABASE, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+  });
 
-    return schemas;
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
-  }
+  if (connection) console.log("Connected to database successful");
+  else throwErr(500, "Connection failed");
+
+  return schemas;
 };
 
-module.exports = connectMongoDB;
+module.exports = { setupMongoDb };

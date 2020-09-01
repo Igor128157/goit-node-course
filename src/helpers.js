@@ -1,24 +1,30 @@
 const makeCall = async (req, res, func) => {
   try {
     const data = req.method === "GET" ? req.query : req.body;
-    data.params = req.params;
+    const ctx = {
+      mongoDb: req.mongoDb,
+    };
 
-    const result = await func(data, { mongoDB: req.mongoDB });
-    const { status, payload } = result;
+    data.params = req.params || {};
 
-    res.status(status).send(payload);
+    data.file = req.file || {};
+
+    const result = await func(data, ctx);
+
+    const { status, ...request } = result;
+    res.status(status).send(request);
   } catch (err) {
     console.log(err);
-    const { status, message } = err;
-    res.status(status).send(message);
+    const { status = 500, message = "Bad request" } = err;
+    res.status(status);
+    res.send(message);
   }
 };
 
-const throwAnswer = ( status, message ) => {
-  throw ( { status, message } )
-}
+const isEqual = (a, b) => a === b;
 
-module.exports = {
-  makeCall,
-  throwAnswer
+const throwErr = (status, message) => {
+  throw { status, message };
 };
+
+module.exports = { makeCall, isEqual, throwErr };

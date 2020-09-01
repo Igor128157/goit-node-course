@@ -1,13 +1,16 @@
-const { throwAnswer } = require("../helpers");
+const { throwErr } = require("../helpers");
+
+const mongoose = require("mongoose");
 
 const contact = {
-  get: async (data, { mongoDb: { userModel } }) => {
+  get: async (data, { mongoDb }) => {
     const token = data.params.authorization;
+    const { userModel } = mongoDb;
 
     const user = await userModel.findOne({ token });
 
     if (!user) {
-      throwAnswer(401, { message: "Not authorized" });
+      throwErr(401, { message: "Not authorized" });
     }
 
     return {
@@ -18,9 +21,10 @@ const contact = {
     };
   },
 
-  update: async (data, { mongoDb: { userModel } }) => {
+  update: async (data, { mongoDb }) => {
     const token = data.params.authorization;
-
+    const { userModel } = mongoDb;
+    const { HOST } = process.env;
     const {
       email,
       subscription,
@@ -30,17 +34,19 @@ const contact = {
     const user = await userModel.findOne({ token });
 
     if (!user) {
-      throwAnswer(401, { message: "Not authorized" });
+      throwErr(401, { message: "Not authorized" });
     }
 
     if (!email || !originalname || !subscription) {
-      throwAnswer(400, "Missing required name field");
+      throwErr(400, "Missing required name field");
     }
 
+    const avatarURL = `${HOST}/images/${originalname}`;
     await userModel.findOneAndUpdate(
       { token },
       {
         email,
+        avatarURL,
         subscription,
       }
     );
@@ -48,6 +54,7 @@ const contact = {
       status: 200,
       email,
       subscription,
+      avatarURL,
     };
   },
 };
